@@ -14,6 +14,15 @@ def test_run_command_captures_stdout() -> None:
     assert "hello-tb" in (result.stdout or "")
 
 
+def test_run_command_sends_stdin() -> None:
+    result = run_command(
+        [sys.executable, "-c", "import sys; print(sys.stdin.read())"],
+        input_text="piped-in",
+    )
+    assert result.returncode == 0
+    assert "piped-in" in (result.stdout or "")
+
+
 def test_stream_command_calls_on_line(tmp_path: Path) -> None:
     lines: list[str] = []
     code = stream_command(

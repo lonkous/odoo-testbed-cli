@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "tb": {
+      "type": "stdio",
+      "command": "tb-mcp"
+    }
+  }
+}

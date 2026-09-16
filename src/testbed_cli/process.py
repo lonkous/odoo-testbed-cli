@@ -11,6 +11,7 @@ def run_command(
     command: list[str],
     cwd: Path | None = None,
     timeout: float | None = None,
+    input_text: str | None = None,
 ) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         command,
@@ -19,6 +20,7 @@ def run_command(
         capture_output=True,
         timeout=timeout,
         check=False,
+        input=input_text,
     )
 
 

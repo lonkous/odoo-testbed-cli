@@ -1,0 +1,17 @@
+{
+  "name": "tb",
+  "displayName": "tb testbed",
+  "version": "0.1.0",
+  "description": "Local Docker Odoo testbeds: start, stop, restore, dump, tests, logs, and psql via MCP.",
+  "author": {
+    "name": "lonkous"
+  },
+  "homepage": "https://github.com/lonkous/odoo-testbed-cli",
+  "repository": "https://github.com/lonkous/odoo-testbed-cli",
+  "logo": "assets/logo.svg",
+  "keywords": ["odoo", "docker", "testbed", "mcp"],
+  "category": "developer-tools",
+  "tags": ["odoo", "docker", "mcp"],
+  "skills": "./skills/",
+  "mcpServers": "./mcp.json"
+}

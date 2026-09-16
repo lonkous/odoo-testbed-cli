@@ -68,11 +68,29 @@ mkdir -p "$(dirname "$skill_dest")"
 command cp "$skill_src" "$skill_dest"
 echo "Cursor skill: $skill_dest"
 
+plugin_dest="$HOME/.cursor/plugins/local/tb"
+mkdir -p "$HOME/.cursor/plugins/local"
+command rm -rf "$plugin_dest"
+command cp -R "$root/plugin" "$plugin_dest"
+python3 - "$mcp_bin" "$plugin_dest/mcp.json" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+command = sys.argv[1]
+path = Path(sys.argv[2])
+path.write_text(
+    json.dumps({"mcpServers": {"tb": {"type": "stdio", "command": command}}}, indent=2) + "\n",
+    encoding="utf-8",
+)
+print(f"Cursor plugin: {path.parent}")
+PY
+
 if [[ ! -x "$tb_bin" ]]; then
   echo "Installed, but tb is not on PATH yet. Open a new terminal and run:"
   echo "  tb setup --defaults"
   echo "  tb doctor"
-  echo "Enable the tb MCP server in Cursor Settings → Tools & MCP."
+  echo "Enable the tb MCP server in Cursor Settings → Tools & MCP, or reload the window for the local plugin."
   exit 0
 fi
 
@@ -81,5 +99,6 @@ fi
 
 echo
 echo "If 'tb' is not found in this shell, open a new terminal."
-echo "Enable the tb MCP server in Cursor Settings → Tools & MCP."
+echo "Enable the tb MCP server in Cursor Settings → Tools & MCP, or reload the window for the local plugin."
+echo "HTTP (optional): tb-mcp --http   then point Cursor at http://127.0.0.1:8765/mcp"
 echo "Next: clone your Odoo repos into ~/Documents (or run tb setup), then tb doctor."

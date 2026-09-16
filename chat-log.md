@@ -516,3 +516,21 @@ Implement the tb MCP for Cursor plan.
 ### Reply
 
 Added a `tb-mcp` stdio server wrapping start/stop/restore/test and related tools, registered it in `~/.cursor/mcp.json`, and installed a personal Cursor skill. Enable the `tb` server in Settings → Tools & MCP. Logs, psql, shell, open, and setup stay in the terminal.
+
+## Wednesday, Sep 16, 2026, 3:05 PM (UTC+2)
+
+### Prompt
+
+i like everything you have suggested in out of scope implement those as well.
+
+### Reply
+
+The previously out-of-scope MCP pieces are in:
+
+- **MCP Apps.** `tb_dashboard` returns the same status text as `tb_status` and is tagged with `ui://tb/dashboard.html` so hosts that render MCP Apps can show it.
+- **HTTP.** `tb-mcp --http` serves Streamable HTTP on `127.0.0.1:8765` (`/mcp`). Stdio remains the default.
+- **Plugin.** `plugin/` is a Cursor plugin (skill + MCP). `./install.sh` copies it to `~/.cursor/plugins/local/tb/`. The repo also has `.cursor-plugin/marketplace.json` for a marketplace submission.
+- **Tools.** `tb_logs` (a log snapshot, not a follow), `tb_psql`, `tb_shell`, `tb_open`, and `tb_setup` are MCP tools now.
+- **Tests.** 178 passing.
+
+Reload Cursor so the plugin and new tools show up. Optional HTTP: run `tb-mcp --http` and add URL `http://127.0.0.1:8765/mcp`.

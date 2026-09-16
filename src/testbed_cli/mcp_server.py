@@ -1,21 +1,45 @@
 from __future__ import annotations
 
+from argparse import ArgumentParser, Namespace
+from importlib.resources import files as package_files
 from pathlib import Path
 import datetime
 import os
 
 from mcp.server.fastmcp import FastMCP
 
-from testbed_cli.config import format_config, load_config
+from testbed_cli.config import apply_setup, format_config, load_config, parse_path_csv
 from testbed_cli.discovery import discover_projects, project_from_path, resolve_project
-from testbed_cli.dockerctl import compose_ps, docker_available
-from testbed_cli.extras import generate_vscode
+from testbed_cli.dockerctl import compose_ps, docker_available, fetch_logs
+from testbed_cli.extras import generate_vscode, open_browser_url, run_odoo_shell_code, run_psql_query
 from testbed_cli.lifecycle import dump_database, restore_backup, start_project, stop_project, tear_down_project
 from testbed_cli.modules import create_module, reload_module
 from testbed_cli.project import Project
 from testbed_cli.tests_run import run_tests
 
-mcp = FastMCP("tb")
+DASHBOARD_URI = "ui://tb/dashboard.html"
+DEFAULT_HTTP_HOST = "127.0.0.1"
+DEFAULT_HTTP_PORT = 8765
+
+mcp = FastMCP(
+    "tb",
+    instructions=(
+        "Odoo testbed CLI. Prefer these tools over shelling out to tb. "
+        "tb_down and tb_restore need confirm=true."
+    ),
+)
+
+
+def parse_mcp_args(argv: list[str] | None = None) -> Namespace:
+    parser = ArgumentParser(prog="tb-mcp", description="MCP server for tb (stdio or Streamable HTTP).")
+    parser.add_argument("--http", action="store_true", help="Serve Streamable HTTP instead of stdio")
+    parser.add_argument("--host", default=DEFAULT_HTTP_HOST, help="HTTP bind address (default 127.0.0.1)")
+    parser.add_argument("--port", type=int, default=DEFAULT_HTTP_PORT, help="HTTP port (default 8765)")
+    return parser.parse_args(argv)
+
+
+def dashboard_html() -> str:
+    return (package_files("testbed_cli") / "templates" / "cursor" / "dashboard.html").read_text(encoding="utf-8")
 
 
 def _resolve(name: str | None) -> Project:
@@ -51,6 +75,16 @@ def _status_line(project: Project) -> str:
         f"{project.database_name:12} odoo {project.odoo_version}  "
         f"web={state.web} db={state.db}  http://localhost:{http_port}  debug={debug_port}"
     )
+
+
+@mcp.resource(
+    DASHBOARD_URI,
+    mime_type="text/html;profile=mcp-app",
+    name="tb dashboard",
+    description="MCP App dashboard for discovered testbeds.",
+)
+def tb_dashboard_app() -> str:
+    return dashboard_html()
 
 
 @mcp.tool()
@@ -105,6 +139,12 @@ def tb_status(name: str | None = None) -> str:
         return "\n".join(_status_line(project) for project in projects)
     except Exception as error:
         return f"Error: {error}"
+
+
+@mcp.tool(meta={"ui": {"resourceUri": DASHBOARD_URI}})
+def tb_dashboard(name: str | None = None) -> str:
+    """Show status in the tb MCP App dashboard (and as text)."""
+    return tb_status(name)
 
 
 @mcp.tool()
@@ -233,5 +273,70 @@ def tb_vscode(name: str | None = None) -> str:
     return _capture(lambda on_line: generate_vscode(_resolve(name), load_config(), on_line=on_line))
 
 
-def main() -> None:
+@mcp.tool()
+def tb_logs(name: str | None = None, service: str | None = None, tail: int = 200) -> str:
+    """Return recent compose logs (a snapshot, not a follow). Default last 200 lines."""
+    try:
+        return fetch_logs(_resolve(name), service=service, tail=tail)
+    except Exception as error:
+        return f"Error: {error}"
+
+
+@mcp.tool()
+def tb_psql(sql: str, name: str | None = None) -> str:
+    """Run one SQL statement against the project database (non-interactive)."""
+    if not sql.strip():
+        return "Error: pass sql."
+    try:
+        return run_psql_query(_resolve(name), sql)
+    except Exception as error:
+        return f"Error: {error}"
+
+
+@mcp.tool()
+def tb_shell(code: str, name: str | None = None) -> str:
+    """Run Python in odoo shell (piped, non-interactive)."""
+    if not code.strip():
+        return "Error: pass code."
+    try:
+        return run_odoo_shell_code(_resolve(name), code)
+    except Exception as error:
+        return f"Error: {error}"
+
+
+@mcp.tool()
+def tb_open(name: str | None = None) -> str:
+    """Open the Odoo web UI in the default browser and return the URL."""
+    try:
+        return open_browser_url(_resolve(name))
+    except Exception as error:
+        return f"Error: {error}"
+
+
+@mcp.tool()
+def tb_setup(
+    project_roots: str | None = None,
+    odoo_root: str | None = None,
+    backup_roots: str | None = None,
+    allow_parallel: bool | None = None,
+) -> str:
+    """Write ~/.config/testbed-cli/config.toml. Paths are comma-separated. Omit all args to show the current config."""
+    if project_roots is None and odoo_root is None and backup_roots is None and allow_parallel is None:
+        return format_config(load_config())
+    config = apply_setup(
+        project_roots=parse_path_csv(project_roots) if project_roots else None,
+        odoo_root=Path(odoo_root).expanduser() if odoo_root else None,
+        backup_roots=parse_path_csv(backup_roots) if backup_roots else None,
+        allow_parallel=allow_parallel,
+    )
+    return format_config(config)
+
+
+def main(argv: list[str] | None = None) -> None:
+    args = parse_mcp_args(argv)
+    if args.http:
+        mcp.settings.host = args.host
+        mcp.settings.port = args.port
+        mcp.run(transport="streamable-http")
+        return
     mcp.run(transport="stdio")

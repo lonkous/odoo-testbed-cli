@@ -14,9 +14,17 @@ cd testbed
 ./install.sh
 ```
 
-That puts `tb` and `tb-mcp` on your PATH, writes `~/.config/testbed-cli/config.toml` with defaults (`~/Documents` for projects, `/opt/odoo` for enterprise, one stack at a time), registers a Cursor MCP server in `~/.cursor/mcp.json`, copies a personal Cursor skill to `~/.cursor/skills/tb/`, and runs `tb doctor`. Open a new terminal if `tb` is not found yet.
+That puts `tb` and `tb-mcp` on your PATH, writes `~/.config/testbed-cli/config.toml` with defaults (`~/Documents` for projects, `/opt/odoo` for enterprise, one stack at a time), registers a Cursor MCP server in `~/.cursor/mcp.json`, copies a personal Cursor skill to `~/.cursor/skills/tb/`, installs a local Cursor plugin under `~/.cursor/plugins/local/tb/`, and runs `tb doctor`. Open a new terminal if `tb` is not found yet.
 
-**Cursor.** After install, open **Settings → Tools & MCP** and enable the `tb` server if it is not already on. The agent can then start/stop/restore/test from any Odoo repo. `tb logs`, `tb psql`, `tb shell`, `tb open`, and `tb setup` stay in the terminal.
+**Cursor.** After install, open **Settings → Tools & MCP** and enable the `tb` server if it is not already on (or **Developer: Reload Window** so the local plugin loads). The agent can start/stop/restore/test, tail a log snapshot, run SQL or odoo-shell code, open the web UI, and write setup from any Odoo repo. `tb_down` / `tb_restore` need `confirm=true`. Hosts that support MCP Apps can render `tb_dashboard`.
+
+Optional Streamable HTTP instead of stdio:
+
+```bash
+tb-mcp --http --host 127.0.0.1 --port 8765
+```
+
+Then add a Cursor MCP server with URL `http://127.0.0.1:8765/mcp`. The GitHub repo can be submitted as a Cursor marketplace (plugin lives in `plugin/`).
 
 If you already cloned it somewhere else, `./install.sh` still works from that folder. After pulling updates, run it again (or `pipx install --editable . --force` from the repo).
 

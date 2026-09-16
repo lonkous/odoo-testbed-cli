@@ -12,6 +12,7 @@ from testbed_cli.dockerctl import (
     compose_down,
     compose_exec,
     compose_exec_capture,
+    fetch_logs,
     compose_network_name,
     compose_ps,
     compose_stop,
@@ -131,6 +132,30 @@ def test_docker_available(monkeypatch) -> None:
     available, message = docker_available()
     assert available is False
     assert message == "Cannot connect"
+
+
+def test_fetch_logs_snapshot(project, monkeypatch) -> None:
+    seen: list[list[str]] = []
+    monkeypatch.setattr(
+        "testbed_cli.dockerctl.run_command",
+        lambda command, timeout=None: seen.append(command) or completed(stdout="web-1 | hello"),
+    )
+    text = fetch_logs(project, service="web", tail=50)
+    assert text == "web-1 | hello"
+    assert "--tail" in seen[0]
+    assert "50" in seen[0]
+    assert seen[0][-1] == "web"
+    logs_index = seen[0].index("logs")
+    assert "-f" not in seen[0][logs_index:]
+
+
+def test_fetch_logs_empty_failure(project, monkeypatch) -> None:
+    monkeypatch.setattr(
+        "testbed_cli.dockerctl.run_command",
+        lambda *args, **kwargs: completed(returncode=1),
+    )
+    with pytest.raises(DockerError, match="docker compose logs failed"):
+        fetch_logs(project)
 
 
 def test_follow_logs_command_inserts_ansi(project) -> None:

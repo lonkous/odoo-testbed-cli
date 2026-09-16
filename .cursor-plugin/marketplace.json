@@ -1,0 +1,16 @@
+{
+  "name": "tb",
+  "owner": {
+    "name": "lonkous"
+  },
+  "metadata": {
+    "description": "Local Docker Odoo testbeds via the tb MCP server."
+  },
+  "plugins": [
+    {
+      "name": "tb",
+      "source": "./plugin",
+      "description": "tb MCP server, skill, and dashboard for Odoo testbeds."
+    }
+  ]
+}

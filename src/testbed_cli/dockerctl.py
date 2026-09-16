@@ -255,6 +255,18 @@ def follow_logs_command(project: Project, service: str | None = None) -> list[st
     return command
 
 
+def fetch_logs(project: Project, service: str | None = None, tail: int = 200) -> str:
+    lines = max(1, min(int(tail), 2000))
+    command = compose_cmd(project) + ["logs", "--tail", str(lines)]
+    if service:
+        command.append(service)
+    result = run_command(command, timeout=30)
+    text = combined_output(result)
+    if result.returncode != 0 and not text:
+        raise DockerError("docker compose logs failed")
+    return text or "(no logs)"
+
+
 def copy_requirements(project: Project, on_line: LogFn | None = None) -> None:
     dest_dir = project.testbed_dir / "docker" / "docker-odoo-test"
     dest_dir.mkdir(parents=True, exist_ok=True)

@@ -1,19 +1,32 @@
 from __future__ import annotations
 
 from importlib.resources import files as package_files
+from pathlib import Path
 import re
 import webbrowser
 
 from testbed_cli.config import Config
-from testbed_cli.dockerctl import compose_network_name, compose_ps, compose_stream_cmd
-from testbed_cli.process import LogFn, run_command, run_interactive, stream_command
+from testbed_cli.dockerctl import (
+    compose_cmd,
+    compose_exec_capture,
+    compose_network_name,
+    compose_ps,
+    compose_stream_cmd,
+)
+from testbed_cli.process import LogFn, combined_output, run_command, run_interactive, stream_command
 from testbed_cli.project import Project
 
 
-def open_browser(project: Project) -> None:
+def open_browser_url(project: Project) -> str:
     status = compose_ps(project)
     port = status.http_port or project.http_port
-    webbrowser.open(f"http://localhost:{port}")
+    url = f"http://localhost:{port}"
+    webbrowser.open(url)
+    return url
+
+
+def open_browser(project: Project) -> None:
+    open_browser_url(project)
 
 
 def run_psql(project: Project) -> int:
@@ -34,6 +47,37 @@ def run_odoo_shell(project: Project) -> int:
             "/etc/odoo/odoo.conf",
         ]
     )
+
+
+def run_psql_query(project: Project, sql: str) -> str:
+    result = compose_exec_capture(
+        project,
+        "db",
+        ["psql", "-x", "-U", "odoo", "-d", project.database_name, "-c", sql],
+    )
+    output = combined_output(result)
+    if result.returncode != 0:
+        raise RuntimeError(output or "psql failed")
+    return output or "ok"
+
+
+def run_odoo_shell_code(project: Project, code: str) -> str:
+    command = compose_cmd(project) + [
+        "exec",
+        "-T",
+        "web",
+        "odoo",
+        "shell",
+        "-d",
+        project.database_name,
+        "-c",
+        "/etc/odoo/odoo.conf",
+    ]
+    result = run_command(command, timeout=120, input_text=code)
+    output = combined_output(result)
+    if result.returncode != 0:
+        raise RuntimeError(output or "odoo shell failed")
+    return output or "ok"
 
 
 def start_mailpit(project: Project, on_line: LogFn | None = None) -> tuple[int, int]:

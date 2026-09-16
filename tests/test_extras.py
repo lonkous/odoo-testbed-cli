@@ -7,11 +7,15 @@ import pytest
 
 from testbed_cli.config import Config
 from testbed_cli.dockerctl import ContainerStatus
+from tests.helpers import completed
 from testbed_cli.extras import (
     generate_vscode,
     open_browser,
+    open_browser_url,
     run_odoo_shell,
+    run_odoo_shell_code,
     run_psql,
+    run_psql_query,
     start_mailpit,
     update_licenses,
 )
@@ -34,6 +38,50 @@ def test_open_browser_falls_back_to_project_port(project, monkeypatch) -> None:
     monkeypatch.setattr("testbed_cli.extras.webbrowser.open", opened.append)
     open_browser(project)
     assert opened == [f"http://localhost:{project.http_port}"]
+
+
+def test_open_browser_url_returns_url(project, monkeypatch) -> None:
+    monkeypatch.setattr(
+        "testbed_cli.extras.compose_ps",
+        lambda item: ContainerStatus(http_port=19999),
+    )
+    opened: list[str] = []
+    monkeypatch.setattr("testbed_cli.extras.webbrowser.open", opened.append)
+    assert open_browser_url(project) == "http://localhost:19999"
+    assert opened == ["http://localhost:19999"]
+
+
+def test_run_psql_query(project, monkeypatch) -> None:
+    monkeypatch.setattr(
+        "testbed_cli.extras.compose_exec_capture",
+        lambda item, service, command: completed(stdout=" count \n-------\n     3"),
+    )
+    assert "3" in run_psql_query(project, "select count(*) from res_partner")
+
+
+def test_run_psql_query_failure(project, monkeypatch) -> None:
+    monkeypatch.setattr(
+        "testbed_cli.extras.compose_exec_capture",
+        lambda item, service, command: completed(returncode=1, stderr="syntax error"),
+    )
+    with pytest.raises(RuntimeError, match="syntax error"):
+        run_psql_query(project, "bad")
+
+
+def test_run_odoo_shell_code(project, monkeypatch) -> None:
+    seen: dict[str, object] = {}
+
+    def fake_run(command, cwd=None, timeout=None, input_text=None):
+        seen["command"] = command
+        seen["input_text"] = input_text
+        return completed(stdout="42")
+
+    monkeypatch.setattr("testbed_cli.extras.compose_cmd", lambda item: ["docker", "compose"])
+    monkeypatch.setattr("testbed_cli.extras.run_command", fake_run)
+    assert run_odoo_shell_code(project, "print(1)") == "42"
+    assert seen["input_text"] == "print(1)"
+    assert "-T" in seen["command"]
+    assert "shell" in seen["command"]
 
 
 def test_run_psql_and_shell(project, monkeypatch) -> None:
