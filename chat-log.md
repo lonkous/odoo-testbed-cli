@@ -506,3 +506,13 @@ If I am in a project folder auto pick that one so I don't need to specify each t
 ### Reply
 
 Commands omit the project name when you are inside a testbed folder (including nested paths). From anywhere else they list the known projects and prompt for a name or number. You can still pass a name as before.
+
+## Wednesday, Sep 16, 2026, 2:47 PM (UTC+2)
+
+### Prompt
+
+Implement the tb MCP for Cursor plan.
+
+### Reply
+
+Added a `tb-mcp` stdio server wrapping start/stop/restore/test and related tools, registered it in `~/.cursor/mcp.json`, and installed a personal Cursor skill. Enable the `tb` server in Settings → Tools & MCP. Logs, psql, shell, open, and setup stay in the terminal.

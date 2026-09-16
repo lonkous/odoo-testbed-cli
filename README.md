@@ -14,7 +14,9 @@ cd testbed
 ./install.sh
 ```
 
-That puts `tb` on your PATH, writes `~/.config/testbed-cli/config.toml` with defaults (`~/Documents` for projects, `/opt/odoo` for enterprise, one stack at a time), and runs `tb doctor`. Open a new terminal if `tb` is not found yet.
+That puts `tb` and `tb-mcp` on your PATH, writes `~/.config/testbed-cli/config.toml` with defaults (`~/Documents` for projects, `/opt/odoo` for enterprise, one stack at a time), registers a Cursor MCP server in `~/.cursor/mcp.json`, copies a personal Cursor skill to `~/.cursor/skills/tb/`, and runs `tb doctor`. Open a new terminal if `tb` is not found yet.
+
+**Cursor.** After install, open **Settings → Tools & MCP** and enable the `tb` server if it is not already on. The agent can then start/stop/restore/test from any Odoo repo. `tb logs`, `tb psql`, `tb shell`, `tb open`, and `tb setup` stay in the terminal.
 
 If you already cloned it somewhere else, `./install.sh` still works from that folder. After pulling updates, run it again (or `pipx install --editable . --force` from the repo).
 
