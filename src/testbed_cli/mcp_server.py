@@ -285,7 +285,7 @@ def tb_logs(name: str | None = None, service: str | None = None, tail: int = 200
 @mcp.tool()
 def tb_psql(sql: str, name: str | None = None) -> str:
     """Run one SQL statement against the project database (non-interactive)."""
-    if not sql.strip():
+    if not (sql or "").strip():
         return "Error: pass sql."
     try:
         return run_psql_query(_resolve(name), sql)
@@ -296,7 +296,7 @@ def tb_psql(sql: str, name: str | None = None) -> str:
 @mcp.tool()
 def tb_shell(code: str, name: str | None = None) -> str:
     """Run Python in odoo shell (piped, non-interactive)."""
-    if not code.strip():
+    if not (code or "").strip():
         return "Error: pass code."
     try:
         return run_odoo_shell_code(_resolve(name), code)

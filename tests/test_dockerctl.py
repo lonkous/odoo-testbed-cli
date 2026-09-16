@@ -158,6 +158,26 @@ def test_fetch_logs_empty_failure(project, monkeypatch) -> None:
         fetch_logs(project)
 
 
+def test_fetch_logs_empty_ok_keeps_error_text_and_clamps(project, monkeypatch) -> None:
+    seen: list[list[str]] = []
+
+    def fake_run(command, timeout=None):
+        seen.append(command)
+        if len(seen) == 1:
+            return completed(stdout="")
+        if len(seen) == 2:
+            return completed(returncode=1, stderr="no container")
+        return completed(stdout="ok")
+
+    monkeypatch.setattr("testbed_cli.dockerctl.run_command", fake_run)
+    assert fetch_logs(project) == "(no logs)"
+    assert fetch_logs(project) == "no container"
+    fetch_logs(project, tail=0)
+    assert seen[2][seen[2].index("--tail") + 1] == "1"
+    fetch_logs(project, tail=9000)
+    assert seen[3][seen[3].index("--tail") + 1] == "2000"
+
+
 def test_follow_logs_command_inserts_ansi(project) -> None:
     command = follow_logs_command(project, "web")
     assert command[:4] == ["docker", "compose", "--ansi", "always"]

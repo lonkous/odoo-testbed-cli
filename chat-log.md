@@ -534,3 +534,13 @@ The previously out-of-scope MCP pieces are in:
 - **Tests.** 178 passing.
 
 Reload Cursor so the plugin and new tools show up. Optional HTTP: run `tb-mcp --http` and add URL `http://127.0.0.1:8765/mcp`.
+
+## Wednesday, Sep 16, 2026, 3:15 PM (UTC+2)
+
+### Prompt
+
+when this is all done implement any missing tests run then them and review code only when you are satisfied commit and push
+
+### Reply
+
+Filled the MCP and helper gaps: resolve/capture, doctor, start/stop/down/restore/dump/test/reload/vscode, HTTP vs stdio, plugin packaging, log snapshots, and empty SQL/shell cases. `tb doctor` now has a CLI test too. Blank `tb_psql` / `tb_shell` input (including None) is refused without crashing. 194 tests passed. Review was clean enough to ship; pushed to `origin/master`.

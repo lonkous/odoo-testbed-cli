@@ -68,6 +68,21 @@ def test_run_psql_query_failure(project, monkeypatch) -> None:
         run_psql_query(project, "bad")
 
 
+def test_run_psql_query_empty_ok(project, monkeypatch) -> None:
+    monkeypatch.setattr(
+        "testbed_cli.extras.compose_exec_capture",
+        lambda item, service, command: completed(),
+    )
+    assert run_psql_query(project, "select 1") == "ok"
+
+
+def test_run_odoo_shell_code_failure(project, monkeypatch) -> None:
+    monkeypatch.setattr("testbed_cli.extras.compose_cmd", lambda item: ["docker", "compose"])
+    monkeypatch.setattr("testbed_cli.extras.run_command", lambda *args, **kwargs: completed(returncode=1))
+    with pytest.raises(RuntimeError, match="odoo shell failed"):
+        run_odoo_shell_code(project, "print(1)")
+
+
 def test_run_odoo_shell_code(project, monkeypatch) -> None:
     seen: dict[str, object] = {}
 

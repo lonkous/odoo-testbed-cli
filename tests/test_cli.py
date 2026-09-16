@@ -46,6 +46,17 @@ def test_status_without_docker(monkeypatch, isolated_config: Config) -> None:
     assert "Cannot connect" in result.stdout
 
 
+def test_doctor_reports_docker_and_missing_odoo(monkeypatch, isolated_config: Config) -> None:
+    monkeypatch.setattr("testbed_cli.cli.load_config", lambda: isolated_config)
+    monkeypatch.setattr("testbed_cli.cli.docker_available", lambda: (False, "Cannot connect"))
+    monkeypatch.setattr("testbed_cli.cli.discover_projects", lambda config: [])
+    result = runner.invoke(app, ["doctor"])
+    assert result.exit_code == 1
+    assert "Cannot connect" in result.stdout
+    assert "odoo_root: missing" in result.stdout
+    assert "projects: none found" in result.stdout
+
+
 def test_status_lists_projects(project, isolated_config: Config, monkeypatch) -> None:
     _bind_project(monkeypatch, project, isolated_config)
     monkeypatch.setattr("testbed_cli.cli.docker_available", lambda: (True, "ok"))
