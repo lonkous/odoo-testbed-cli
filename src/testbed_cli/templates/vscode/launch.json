@@ -1,0 +1,66 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Start",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "tb start {{name}}",
+      "presentation": {"hidden": false, "group": "Testbed", "order": 4}
+    },
+    {
+      "name": "Debug",
+      "type": "debugpy",
+      "request": "attach",
+      "preLaunchTask": "testbed-restart-pydebug",
+      "connect": {"host": "localhost", "port": {{debug_port}}},
+      "pathMappings": [
+        {"localRoot": "${workspaceFolder}/addons", "remoteRoot": "/mnt/extra-addons"},
+        {
+          "localRoot": "{{odoo_root}}/enterprise_{{odoo_version}}",
+          "remoteRoot": "/mnt/enterprise"
+        },
+        {
+          "localRoot": "{{odoo_root}}/odoo",
+          "remoteRoot": "/usr/lib/python3/dist-packages/odoo"
+        }
+      ],
+      "presentation": {"hidden": false, "group": "Testbed", "order": 5}
+    },
+    {
+      "name": "Run Tests",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "tb test {{name}}",
+      "presentation": {"hidden": false, "group": "Testbed", "order": 2}
+    },
+    {
+      "name": "Init Empty",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "tb start {{name}} --init",
+      "presentation": {"hidden": false, "group": "Testbed", "order": 1}
+    },
+    {
+      "name": "Cleanup",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "tb down {{name}}",
+      "presentation": {"hidden": false, "group": "Testbed", "order": 3}
+    },
+    {
+      "name": "Stop",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "tb stop {{name}}",
+      "presentation": {"hidden": false, "group": "Testbed", "order": 5}
+    },
+    {
+      "name": "Update Modules",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "tb update-modules {{name}}",
+      "presentation": {"hidden": false, "group": "Testbed", "order": 6}
+    }
+  ]
+}

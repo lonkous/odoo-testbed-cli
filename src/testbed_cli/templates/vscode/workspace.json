@@ -1,0 +1,12 @@
+{
+  "folders": [
+    {"path": "."},
+    {"path": "{{odoo_root}}/enterprise_{{odoo_version}}"},
+    {"path": "{{odoo_root}}/odoo"}
+  ],
+  "settings": {
+    "window.title": "{{name}}",
+    "python.languageServer": "None",
+    "python.analysis.typeCheckingMode": "standard"
+  }
+}

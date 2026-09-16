@@ -1,0 +1,19 @@
+---
+description: Log each prompt and reply to chat-log.md, then commit and push
+alwaysApply: true
+---
+
+# Chat log
+
+When you finish a user request, update `chat-log.md` in the repo root, then commit and push.
+
+1. Append a dated `##` section with **Prompt** (the user message) and **Reply** (your user-facing answer only - no tool traces).
+2. `git add chat-log.md`, commit with `chore(chat-log): <short summary>`, and `git push` to the tracked branch.
+3. Do this even if the request needed no code change. The log commit may share a commit with other work from the same turn.
+
+Skip the log when:
+
+- The prompt asks to strip, hide, or omit company or customer names (do not log that turn at all).
+- Logging it would put those names back into the repo. Substitute generic names (`demo`, `shop`, `your-project`) if a prompt mentions a customer project.
+
+Do not log secrets, credentials, or raw tool output.

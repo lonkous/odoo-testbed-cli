@@ -1,0 +1,50 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "tb doctor",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "testbed_cli",
+      "args": ["doctor"],
+      "cwd": "${workspaceFolder}",
+      "env": {"PYTHONPATH": "${workspaceFolder}/src"}
+    },
+    {
+      "name": "tb --help",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "testbed_cli",
+      "args": ["--help"],
+      "cwd": "${workspaceFolder}",
+      "env": {"PYTHONPATH": "${workspaceFolder}/src"}
+    },
+    {
+      "name": "tb status",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "testbed_cli",
+      "args": ["status"],
+      "cwd": "${workspaceFolder}",
+      "env": {"PYTHONPATH": "${workspaceFolder}/src"}
+    },
+    {
+      "name": "tb setup --show",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "testbed_cli",
+      "args": ["setup", "--show"],
+      "cwd": "${workspaceFolder}",
+      "env": {"PYTHONPATH": "${workspaceFolder}/src"}
+    },
+    {
+      "name": "Pytest",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": ["-q"],
+      "cwd": "${workspaceFolder}",
+      "env": {"PYTHONPATH": "${workspaceFolder}/src"}
+    }
+  ]
+}

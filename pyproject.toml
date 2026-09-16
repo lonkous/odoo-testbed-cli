@@ -1,0 +1,32 @@
+[project]
+name = "testbed-cli"
+version = "0.1.0"
+description = "CLI for Odoo testbeds"
+requires-python = ">=3.12"
+dependencies = [
+    "typer>=0.12.0",
+    "rich>=13.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+
+[project.scripts]
+testbed-cli = "testbed_cli.cli:app"
+tb = "testbed_cli.cli:app"
+
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+testbed_cli = ["templates/vscode/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

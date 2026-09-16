@@ -1,0 +1,18 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "testbed-restart-pydebug",
+      "type": "shell",
+      "command": "tb debug-restart {{name}}",
+      "presentation": {"reveal": "silent", "close": true}
+    },
+    {
+      "label": "open PostgreSQL CLI in running db container",
+      "type": "shell",
+      "command": "tb psql {{name}}",
+      "options": {"cwd": "${workspaceFolder}"},
+      "problemMatcher": []
+    }
+  ]
+}

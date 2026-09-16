@@ -1,0 +1,8 @@
+{
+  "python.languageServer": "None",
+  "python.analysis.extraPaths": [
+    "{{odoo_root}}/odoo",
+    "{{odoo_root}}/enterprise_{{odoo_version}}"
+  ],
+  "python.analysis.typeCheckingMode": "standard"
+}
