@@ -554,3 +554,13 @@ when running tb test it does install the modules that are being tested from the 
 ### Reply
 
 `tb test` now always installs `MODULES_TO_TEST` from `.env` into the test database (plus any extra `-m` names). A `-m` subset no longer drops the env list, names are stripped, and a module counts as installed only when its name is actually in `ir_module_module`.
+
+## Thursday, Sep 17, 2026, 11:35 AM (UTC+2)
+
+### Prompt
+
+why is it opening on port 8070 and not 8069
+
+### Reply
+
+8069 was busy at some point (another stack or leftover container), so tb mapped host 8070 onto container 8069 and wrote that into `.env`. Later exclusive starts kept using 8070 even after 8069 was free. Exclusive start now puts HTTP back on 8069 when that port is free. Recreate the stack with `tb start` to pick it up.

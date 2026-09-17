@@ -21,7 +21,7 @@ from testbed_cli.dockerctl import (
     wait_for_ready,
 )
 from testbed_cli.enterprise import sync_enterprise
-from testbed_cli.ports import allocate_ports
+from testbed_cli.ports import allocate_ports, reclaim_default_ports
 from testbed_cli.process import LogFn, stream_command
 from testbed_cli.project import Project
 
@@ -53,19 +53,23 @@ def ensure_exclusive(
     if _use_parallel(config, parallel):
         return
     others = other_running_projects(project, siblings)
-    if not others:
-        return
-    names = ", ".join(item.database_name for item in others)
-    label = "testbed" if len(others) == 1 else "testbeds"
-    message = (
-        f"Heads up: stopping running {label} {names} so {project.database_name} can start."
-    )
-    if on_line:
-        on_line(message)
-    else:
-        print(message)
-    for other in others:
-        compose_stop(other, on_line=on_line)
+    if others:
+        names = ", ".join(item.database_name for item in others)
+        label = "testbed" if len(others) == 1 else "testbeds"
+        message = (
+            f"Heads up: stopping running {label} {names} so {project.database_name} can start."
+        )
+        if on_line:
+            on_line(message)
+        else:
+            print(message)
+        for other in others:
+            compose_stop(other, on_line=on_line)
+    if reclaim_default_ports(project) and on_line:
+        on_line(
+            f"Host HTTP is back on {project.http_port} "
+            f"(test {project.test_port}, debug {project.debug_port})."
+        )
 
 
 def allocate_if_parallel(
