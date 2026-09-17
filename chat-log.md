@@ -544,3 +544,13 @@ when this is all done implement any missing tests run then them and review code 
 ### Reply
 
 Filled the MCP and helper gaps: resolve/capture, doctor, start/stop/down/restore/dump/test/reload/vscode, HTTP vs stdio, plugin packaging, log snapshots, and empty SQL/shell cases. `tb doctor` now has a CLI test too. Blank `tb_psql` / `tb_shell` input (including None) is refused without crashing. 194 tests passed. Review was clean enough to ship; pushed to `origin/master`.
+
+## Thursday, Sep 17, 2026, 9:55 AM (UTC+2)
+
+### Prompt
+
+when running tb test it does install the modules that are being tested from the env file MODULES_TO_TEST
+
+### Reply
+
+`tb test` now always installs `MODULES_TO_TEST` from `.env` into the test database (plus any extra `-m` names). A `-m` subset no longer drops the env list, names are stripped, and a module counts as installed only when its name is actually in `ir_module_module`.

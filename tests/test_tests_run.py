@@ -92,6 +92,11 @@ def test_modules_installed(project, monkeypatch) -> None:
     assert _modules_installed(project, "base,sale") is True
     assert _modules_installed(project, "base,sale,extra") is False
     assert _modules_installed(project, "") is False
+    monkeypatch.setattr(
+        "testbed_cli.tests_run.compose_exec_capture",
+        lambda *args, **kwargs: completed(returncode=1, stdout=" base \n"),
+    )
+    assert _modules_installed(project, "base") is False
 
 
 def test_odoo_install_failure(project, monkeypatch) -> None:
@@ -210,7 +215,7 @@ def test_run_standard_tests_pytest_format(project, monkeypatch) -> None:
 
 
 def test_run_tests_updates_when_already_installed(project, isolated_config, monkeypatch) -> None:
-    installs: list[bool] = []
+    installs: list[tuple[str, bool]] = []
     monkeypatch.setattr("testbed_cli.tests_run.load_config", lambda: isolated_config)
     monkeypatch.setattr("testbed_cli.tests_run.discover_projects", lambda config: [])
     monkeypatch.setattr("testbed_cli.tests_run.ensure_exclusive", lambda *args, **kwargs: None)
@@ -224,15 +229,16 @@ def test_run_tests_updates_when_already_installed(project, isolated_config, monk
     monkeypatch.setattr("testbed_cli.tests_run._modules_installed", lambda *args, **kwargs: True)
     monkeypatch.setattr(
         "testbed_cli.tests_run._odoo_install",
-        lambda proj, modules, install, on_line: installs.append(install),
+        lambda proj, modules, install, on_line: installs.append((modules, install)),
     )
     monkeypatch.setattr(
         "testbed_cli.tests_run._run_custom_pytest",
         lambda *args, **kwargs: (1, 0, 0, 1, "custom ok"),
     )
     monkeypatch.setattr("testbed_cli.tests_run._copy_coverage", lambda *args, **kwargs: None)
-    run_tests(project, reinit_db=False)
-    assert installs == [False]
+    project.modules_to_test = "sale_custom,base"
+    run_tests(project, modules="sale_custom", reinit_db=False)
+    assert installs == [("sale_custom,base", False)]
 
 
 def test_odoo_install_uses_install_flag(project, monkeypatch) -> None:

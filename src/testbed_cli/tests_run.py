@@ -19,6 +19,14 @@ from testbed_cli.project import Project
 ODOO_ADDONS_PATH = "/usr/lib/python3/dist-packages/odoo/addons,/mnt/extra-addons,/mnt/enterprise"
 
 
+def _module_names(raw: str) -> list[str]:
+    return [name.strip() for name in raw.split(",") if name.strip()]
+
+
+def _module_csv(names: list[str]) -> str:
+    return ",".join(names)
+
+
 def run_tests(
     project: Project,
     modules: str | None = None,
@@ -27,9 +35,13 @@ def run_tests(
     on_line: LogFn | None = None,
     parallel: bool | None = None,
 ) -> str:
-    chosen = (modules or project.modules_to_test).strip()
-    if not chosen:
+    test_names = _module_names(modules or "") or _module_names(project.modules_to_test)
+    if not test_names:
         raise ValueError("No modules to test. Set MODULES_TO_TEST or pass module names.")
+    # Always install the .env list; -m may add extras but must not drop MODULES_TO_TEST.
+    install_names = list(dict.fromkeys(_module_names(project.modules_to_test) + test_names))
+    chosen = _module_csv(test_names)
+    install_csv = _module_csv(install_names)
     config = load_config()
     siblings = discover_projects(config)
     ensure_exclusive(project, config, siblings, parallel=parallel, on_line=on_line)
@@ -42,14 +54,14 @@ def run_tests(
         raise RuntimeError(f"No test directories found for modules: {chosen}")
     if reinit_db:
         _reinit_test_db(project, on_line)
-    if reinit_db or not _modules_installed(project, chosen):
+    if reinit_db or not _modules_installed(project, install_csv):
         if on_line:
-            on_line(f"Installing modules: {chosen}")
-        _odoo_install(project, chosen, install=True, on_line=on_line)
+            on_line(f"Installing modules: {install_csv}")
+        _odoo_install(project, install_csv, install=True, on_line=on_line)
     else:
         if on_line:
-            on_line(f"Updating modules: {chosen}")
-        _odoo_install(project, chosen, install=False, on_line=on_line)
+            on_line(f"Updating modules: {install_csv}")
+        _odoo_install(project, install_csv, install=False, on_line=on_line)
 
     summary_parts: list[str] = []
     total_tests = 0
@@ -107,7 +119,7 @@ def _categorise_modules(
 ) -> tuple[list[str], list[str]]:
     custom_modules: list[str] = []
     standard_modules: list[str] = []
-    for module_name in [name.strip() for name in modules.split(",") if name.strip()]:
+    for module_name in _module_names(modules):
         if _dir_exists(project, f"/mnt/extra-addons/{module_name}"):
             custom_modules.append(module_name)
             if on_line:
@@ -150,7 +162,7 @@ def _reinit_test_db(project: Project, on_line: LogFn | None) -> None:
 
 
 def _modules_installed(project: Project, modules: str) -> bool:
-    names = [name.strip() for name in modules.split(",") if name.strip()]
+    names = _module_names(modules)
     if not names:
         return False
     quoted = ",".join(f"'{name}'" for name in names)
@@ -164,21 +176,21 @@ def _modules_installed(project: Project, modules: str) -> bool:
             "-d",
             "test",
             "-t",
+            "-A",
             "-c",
             f"SELECT name FROM ir_module_module WHERE state='installed' AND name IN ({quoted});",
         ],
         compose_file=project.compose_test_file,
     )
-    installed = [
-        line.strip()
-        for line in (result.stdout or "").splitlines()
-        if line.strip()
-    ]
-    return len(installed) == len(names)
+    if result.returncode != 0:
+        return False
+    found = {line.strip() for line in (result.stdout or "").splitlines() if line.strip()}
+    return set(names) <= found
 
 
 def _odoo_install(project: Project, modules: str, install: bool, on_line: LogFn | None) -> None:
     flag = "-i" if install else "-u"
+    module_csv = _module_csv(_module_names(modules))
     code = compose_exec(
         project,
         "web",
@@ -190,12 +202,12 @@ def _odoo_install(project: Project, modules: str, install: bool, on_line: LogFn 
             "/etc/odoo/odoo-pytest.conf",
             f"--addons-path={ODOO_ADDONS_PATH}",
             flag,
-            modules,
+            module_csv,
             "--stop-after-init",
         ],
         on_line=on_line,
         compose_file=project.compose_test_file,
-        env={"MODULES_TO_TEST": modules},
+        env={"MODULES_TO_TEST": module_csv},
     )
     if code != 0:
         raise RuntimeError("Odoo module install/update for tests failed")
